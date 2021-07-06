@@ -6,14 +6,13 @@ import de.jlo.talend.execjob.TalendJob;
 public class PlayTalendJob {
 	
 	public static void main(String[] args) throws Exception {
-		String jobPath = "/Users/jan/development/exports/";
+		String jobPath = "/home/jan-lolling/temp/job";
 		TalendJob ex = new TalendJob();
-		ex.setAlljobsRootPath(jobPath);
+		ex.setJobRootPath(jobPath);
 		ex.setJobName("test_job_with_context");
 		ex.setJobVersion("0.1");
-		ex.setProject("compdev");
-		ex.setupJobClassLoader();
-		ex.setContext("var_boolean", true);
+		ex.setProject("talend_common");
+		ex.setContext("var_boolean", null);
 		ex.setContext("var_int", null);
 		ex.setContext("var_double", 0.987d);
 		ex.setContext("var_float", 0.5f);

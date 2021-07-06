@@ -20,7 +20,7 @@ public class TalendJob {
 	private String project = null;
 	private String jobName = null;
 	private String jobVersion = null;
-	private String alljobsRootPath = null;
+	private String jobRootPath = null;
 	private List<File> jarFiles = new ArrayList<>();
 	private ClassLoader jobClassLoader = null;
 	private Properties contextVars = new Properties();
@@ -43,25 +43,30 @@ public class TalendJob {
 		});
 		for (File jar : jars) {
 			jarFiles.add(jar);
-			System.out.println(jar);
 		}
 	}
 	
 	private void collectJarFiles() throws Exception {
-		File dir = Util.getFile(alljobsRootPath, true, "all-jobs-root-dir");
-		File libdir = Util.getFile(dir.getAbsolutePath() + "/" + jobName + "/lib", true, "job-lib-dir");
+		File dir = Util.getFile(jobRootPath, true, "job-root-dir");
+		File libdir = Util.getFile(dir.getAbsolutePath() + "/lib", true, "job-lib-dir");
 		collectJarFiles(libdir);
-		File jobdir = Util.getFile(dir.getAbsolutePath() + "/" + jobName + "/" + jobName, true, "job-dir");
+		File jobdir = Util.getFile(dir.getAbsolutePath() + "/" + jobName, true, "job-dir");
 		collectJarFiles(jobdir);
 	}
 	
-	public void setupJobClassLoader() throws Exception {
+	private void setupJobClassLoader() throws Exception {
 		collectJarFiles();
-		URL[] urls = new URL[jarFiles.size()];
-		for (int i = 0; i < jarFiles.size(); i++) {
+		URL[] urls = new URL[jarFiles.size()+1];
+		int i = 0;
+		for ( ; i < jarFiles.size(); i++) {
 			urls[i] = new URL("file:" + jarFiles.get(i).getAbsolutePath());
 		}
-		jobClassLoader = new URLClassLoader(urls, this.getClass().getClassLoader());
+		urls[i] = new URL("file:" + jobRootPath);
+		try {
+			jobClassLoader = new URLClassLoader(urls, this.getClass().getClassLoader());
+		} catch (Throwable t) {
+			throw new Exception("Create classloader for jars failed: " + t.getMessage(), t);
+		}
 	}
 	
 	public void setContext(String varname, Object value) {
@@ -141,6 +146,7 @@ public class TalendJob {
 	 */
 	@SuppressWarnings("unchecked")
 	public void start() throws Exception {
+		setupJobClassLoader();
 		jobResult = null;
 		jobHasOutputFlow = false;
 		String className = project + "." + jobName + "_" + jobVersion.replace('.', '_') + "." + jobName;
@@ -202,15 +208,16 @@ public class TalendJob {
 	}
 
 	public String getAlljobsRootPath() {
-		return alljobsRootPath;
+		return jobRootPath;
 	}
 
 	/**
-	 * Root path for all jobs
-	 * @param alljobsRootPath
+	 * Root for the current job
+	 * This is the folder where the jobInfo.properties file resists
+	 * @param jobRootPath
 	 */
-	public void setAlljobsRootPath(String alljobsRootPath) {
-		this.alljobsRootPath = alljobsRootPath;
+	public void setJobRootPath(String jobRootPath) {
+		this.jobRootPath = jobRootPath;
 	}
 	
 	public boolean jobHasResultOutputFlow() {
