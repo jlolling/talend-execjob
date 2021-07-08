@@ -29,6 +29,12 @@ public class TalendJob {
 	public static final String TALEND_NULL = "<TALEND_NULL>";
 	private boolean jobHasOutputFlow = false;
 	private Map<String, Object> globalMap = null;
+	private HttpClient httpClient = null;
+	private String nexusBaseUrl = null;
+	private String nexusDownloadPathPattern = "/repository/{repository}/{groupIdPath}/{jobName}/{jobVersion}/{jobName}-{jobVersion}";
+	private String nexusRepository = "releases";
+	private String nexusLogin = null;
+	private String nexusPassword = null;
 	
 	private void collectJarFiles(File dir) {
 		File[] jars = dir.listFiles(new FilenameFilter() {
