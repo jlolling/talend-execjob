@@ -9,8 +9,8 @@ public class PlayTalendJob {
 		String jobPath = "/home/jan-lolling/temp/job";
 		TalendJob ex = new TalendJob();
 		ex.setJobRootPath(jobPath);
-		ex.setJobName("test_job_with_context");
-		ex.setJobVersion("0.1");
+//		ex.setJobName("test_job_with_context");
+//		ex.setJobVersion("0.1");
 		ex.setProject("talend_common");
 		ex.setContext("var_boolean", null);
 		ex.setContext("var_int", null);

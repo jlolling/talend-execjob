@@ -1,7 +1,9 @@
 package de.jlo.talend.execjob;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FilenameFilter;
+import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -35,6 +37,7 @@ public class TalendJob {
 	private String nexusRepository = "releases";
 	private String nexusLogin = null;
 	private String nexusPassword = null;
+	private Properties jobInfoProperties = new Properties();
 	
 	private void collectJarFiles(File dir) {
 		File[] jars = dir.listFiles(new FilenameFilter() {
@@ -146,12 +149,49 @@ public class TalendJob {
 		this.jobVersion = jobVersion;
 	}
 	
+	private void readJobInfo() throws Exception {
+		File jobInfoFile = new File(jobRootPath, "jobInfo.properties");
+		if (jobInfoFile.exists() == false) {
+			throw new Exception("For the job with the root path: " + jobRootPath + " the jobInfo.properties file is missing. Please take care the path refers to the job root dir.");
+		}
+		jobInfoProperties.clear();
+		InputStream in = new FileInputStream(jobInfoFile);
+		try {
+			jobInfoProperties.load(in);
+		} catch (Exception e) {
+			throw new Exception("Error while reading jobInfo properties from file: " + jobInfoFile.getAbsolutePath() + ": " + e.getMessage(), e);
+		} finally {
+			if (in != null) {
+				try { in.close(); } catch (Exception ex) {}
+			}
+		}
+		if (project == null) {
+			project = jobInfoProperties.getProperty("project");
+		}
+		if (project == null) {
+			throw new IllegalStateException("project not set or could not determined from jobInfo.properties");
+		}
+		if (jobName == null) {
+			jobName = jobInfoProperties.getProperty("job");
+		}
+		if (jobName == null) {
+			throw new IllegalStateException("jobName not set or could not determined from jobInfo.properties");
+		}
+		if (jobVersion == null) {
+			jobVersion = jobInfoProperties.getProperty("jobVersion");
+		}
+		if (jobVersion == null) {
+			throw new IllegalStateException("jobVersion not set or could not determined from jobInfo.properties");
+		}
+	}
+	
 	/**
 	 * Start the Talend job and get the result if there are some
 	 * @throws Exception
 	 */
 	@SuppressWarnings("unchecked")
 	public void start() throws Exception {
+		readJobInfo();
 		setupJobClassLoader();
 		jobResult = null;
 		jobHasOutputFlow = false;
@@ -205,6 +245,7 @@ public class TalendJob {
 		}
 		Object args = buildContextParams();
 		try {
+			System.out.println("Start job: " + jobName + " version: " + jobVersion);
 			jobResult = (String[][]) methodRunJob.invoke(instance, args);
 		} catch (InvocationTargetException te) {
 			throw new Exception("Run job with class: " + className + " failed: " + te.getMessage(), te);
