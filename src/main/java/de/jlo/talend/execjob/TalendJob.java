@@ -195,7 +195,7 @@ public class TalendJob {
 		setupJobClassLoader();
 		jobResult = null;
 		jobHasOutputFlow = false;
-		String className = project + "." + jobName + "_" + jobVersion.replace('.', '_') + "." + jobName;
+		String className = project.toLowerCase() + "." + jobName + "_" + jobVersion.replace('.', '_') + "." + jobName;
 		Class<?> jobClass = null;
 		try {
 			jobClass = Class.forName(className, true, jobClassLoader);
